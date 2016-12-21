@@ -1,3 +1,28 @@
+flatpak (0.6.13-1endless1) xenial; urgency=medium
+
+  * Drop non-xenial compatible changes. This is based off the changes in
+    debian's jessie-backports branch. (T14049)
+    - debian/control: (build-)depend on libgtk-3-bin, not
+      gtk-update-icon-cache
+    - d/p/debian/Try-gtk-3.0-version-of-the-icon-cache-utility-first.patch:
+      try to use gtk-update-icon-cache-3.0 before gtk-update-icon-cache
+    - drop debhelper compat level and dependency back to 9
+      + reinstate explicit use of parallel build, dh-autoreconf and
+        dh-systemd, which were not the default in this compat level
+  * Add quilt patching since this is based on our Jenkins generated
+    source packages which sets the format to 1.0.
+    - debian/rules: Add --with quilt.
+    - debian/control: Build depend on quilt.
+  * debian/patches/endless-export-speedwagon.patch: Drop, included in
+    Endless git changes.
+  * debian/patches/endless-no-unshare-pid.patch: Drop, the xenial kernel
+    seems to now support this. Quick test is "bwrap --ro-bind / / --dev
+    /dev --proc /proc --unshare-pid --unshare-user-try echo ok". (T11523)
+  * debian/patches/endless-utils-fix-double-loop-when-extracting-icons-for-apps.patch:
+    Drop, included upstream.
+
+ -- Dan Nicholson <nicholson@endlessm.com>  Fri, 04 Nov 2016 12:41:44 -0700
+
 flatpak (0.6.13-1) unstable; urgency=medium
 
   * New upstream release
