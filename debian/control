@@ -89,16 +89,17 @@ Package: flatpak-builder
 Architecture: linux-any
 Section: devel
 Depends:
+ appstream-util,
  flatpak (= ${binary:Version}),
  ${misc:Depends},
  ${shlibs:Depends},
 Recommends:
  binutils,
- bzr,
  elfutils,
  git,
  patch,
  unzip,
+Suggests: bzr
 Description: Flatpak application building helper
  Flatpak installs, manages and runs sandboxed desktop application bundles.
  See the flatpak package for a more comprehensive description.
