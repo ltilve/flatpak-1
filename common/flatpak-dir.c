@@ -1763,6 +1763,9 @@ repo_pull_one_dir (OstreeRepo          *self,
   g_variant_builder_add (&builder, "{s@v}", "override-commit-ids",
                          g_variant_new_variant (g_variant_new_strv ((const char * const *) revs_to_fetch, -1)));
 
+  g_variant_builder_add (&builder, "{s@v}", "update-frequency",
+                         g_variant_new_variant (g_variant_new_uint32 (FLATPAK_DEFAULT_UPDATE_FREQUENCY)));
+
   options = g_variant_ref_sink (g_variant_builder_end (&builder));
   res = ostree_repo_pull_with_options (self, remote_name, options,
                                        progress, cancellable, error);
@@ -1837,30 +1840,32 @@ flatpak_dir_setup_extra_data (FlatpakDir           *self,
         return FALSE;
 
       extra_data_sources = flatpak_repo_get_extra_data_sources (repo, rev, cancellable, NULL);
-      if (extra_data_sources == NULL)
-        return TRUE;
     }
 
-  n_extra_data = g_variant_n_children (extra_data_sources);
-  if (n_extra_data == 0)
-    return TRUE;
-
-  if ((flatpak_flags & FLATPAK_PULL_FLAGS_DOWNLOAD_EXTRA_DATA) == 0)
-    return flatpak_fail (error, "extra data not supported for non-gpg-verified local system installs");
-
+  n_extra_data = 0;
   total_download_size = 0;
-  for (i = 0; i < n_extra_data; i++)
+
+  if (extra_data_sources != NULL)
+    n_extra_data = g_variant_n_children (extra_data_sources);
+
+  if (n_extra_data > 0)
     {
-      guint64 download_size;
+      if ((flatpak_flags & FLATPAK_PULL_FLAGS_DOWNLOAD_EXTRA_DATA) == 0)
+        return flatpak_fail (error, "extra data not supported for non-gpg-verified local system installs");
 
-      flatpak_repo_parse_extra_data_sources (extra_data_sources, i,
-                                             NULL,
-                                             &download_size,
-                                             NULL,
-                                             NULL,
-                                             NULL);
+      for (i = 0; i < n_extra_data; i++)
+        {
+          guint64 download_size;
 
-      total_download_size += download_size;
+          flatpak_repo_parse_extra_data_sources (extra_data_sources, i,
+                                                 NULL,
+                                                 &download_size,
+                                                 NULL,
+                                                 NULL,
+                                                 NULL);
+
+          total_download_size += download_size;
+        }
     }
 
   if (progress)
@@ -2292,6 +2297,8 @@ repo_pull_one_untrusted (OstreeRepo          *self,
                          g_variant_new_variant (g_variant_new_boolean (TRUE)));
   g_variant_builder_add (&builder, "{s@v}", "inherit-transaction",
                          g_variant_new_variant (g_variant_new_boolean (TRUE)));
+  g_variant_builder_add (&builder, "{s@v}", "update-frequency",
+                         g_variant_new_variant (g_variant_new_uint32 (FLATPAK_DEFAULT_UPDATE_FREQUENCY)));
 
   if (dirs_to_pull)
     {
